@@ -1,0 +1,75 @@
+// KQL Practice Queries - VS Code Interactive
+// Install: Azure Log Analytics extension for syntax highlighting and execution
+
+// ============================================
+// BASIC QUERIES
+// ============================================
+
+// 1. Search all tables
+search "error"
+| take 10
+
+// 2. Explore SecurityEvent table
+SecurityEvent
+| take 10
+
+// 3. Count events by EventID
+SecurityEvent
+| summarize count() by EventID
+| order by count_ desc
+
+// 4. Filter by time range
+SecurityEvent
+| where TimeGenerated > ago(1d)
+| take 100
+
+// ============================================
+// INTERMEDIATE QUERIES
+// ============================================
+
+// 5. Successful logon analysis
+SecurityEvent
+| where EventID == 4624
+| summarize count() by Account
+| order by count_ desc
+
+// 6. Failed logon attempts
+SecurityEvent
+| where EventID == 4625
+| project TimeGenerated, Account, Computer, IpAddress
+| order by TimeGenerated desc
+
+// 7. Join operations
+SecurityEvent
+| where EventID == 4624
+| join kind=inner (
+    SecurityEvent
+    | where EventID == 4634
+) on Computer
+| project TimeGenerated, Account, Computer
+
+// ============================================
+// ADVANCED QUERIES
+// ============================================
+
+// 8. Time series analysis
+SecurityEvent
+| where TimeGenerated > ago(7d)
+| summarize count() by bin(TimeGenerated, 1h)
+| render timechart
+
+// 9. Anomaly detection
+SecurityEvent
+| where EventID == 4625
+| make-series FailedLogons=count() default=0 on TimeGenerated step 1h
+| extend anomalies = series_decompose_anomalies(FailedLogons)
+
+// 10. Multi-table correlation
+SecurityEvent
+| where EventID == 4625
+| summarize FailedAttempts=count() by Computer, bin(TimeGenerated, 1h)
+| join kind=inner (
+    Heartbeat
+    | summarize by Computer, bin(TimeGenerated, 1h)
+) on Computer, TimeGenerated
+| where FailedAttempts > 10
