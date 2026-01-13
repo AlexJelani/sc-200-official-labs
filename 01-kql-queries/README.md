@@ -33,6 +33,24 @@ terraform init
 terraform apply -auto-approve
 ```
 
+## 🗄️ Remote Backend Configuration
+
+**Terraform state is stored remotely in Azure Storage:**
+- **Storage Account**: `tfstate83877`
+- **Resource Group**: `rg-terraform-state`
+- **Container**: `tfstate`
+- **State File**: `sc200-kql-lab.tfstate`
+
+**For other SC-200 labs**, use same backend with different keys:
+```hcl
+backend "azurerm" {
+  resource_group_name  = "rg-terraform-state"
+  storage_account_name = "tfstate83877"
+  container_name       = "tfstate"
+  key                  = "sc200-[lab-name].tfstate"  # Change this
+}
+```
+
 ## 📊 Infrastructure Created
 
 - **Resource Group**: `rg-sentinel-lab`
